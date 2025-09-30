@@ -1,0 +1,18 @@
+# AWS & SSH
+.aws/
+.keys/
+*.pem
+*.ppk
+**/id_rsa*
+**/id_ed25519*
+**/known_hosts
+
+# Python
+__pycache__/
+*.pyc
+python3_CC/
+.venv/
+venv/
+
+# OS cruft
+.DS_Store
