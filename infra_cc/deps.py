@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # infra_cc/deps.py
-# Generic dependency framework + auto-loader for resource modules.
+# Dependency framework: register checkers/deleters, build/print tree, delete in safe order.
+# This version NEVER prompts; it always proceeds (post-order) once called.
 
 from __future__ import annotations
 from dataclasses import dataclass, field
@@ -102,40 +103,27 @@ def _delete_tree_postorder(node: Blocker) -> None:
 
 def prompt_and_delete(root: Blocker, delete_root: bool = True) -> None:
     """
-    Print the dependency tree and ask to delete blockers in order.
-    If there are NO dependencies:
-      - delete immediately (no prompt) when delete_root=True,
-      - or do nothing (there's nothing to delete) when delete_root=False.
+    Print the dependency tree (if there are children) and ALWAYS delete in order.
+    No prompts here — the only Y/N in the system remains the NAT warning in full_setup.
     """
     _ensure_plugins_loaded_once()
 
-    # If no dependencies, fast-path: no prompt.
-    if not root.children:
-        if delete_root:
-            deleter = _DELETERS.get(root.kind)
-            if not deleter:
-                raise DeleteBlocked(root, msg=f"Missing deleter for kind: {root.kind}")
-            deleter(root.id)  # root-only delete, no prompt needed
-        return
-
-    # Dependencies exist: show tree and prompt
-    print("[dependencies]")
-    print_tree(root)
+    # Show dependencies if any (helps visibility)
+    if root.children:
+        print("[dependencies]")
+        print_tree(root)
 
     # Ensure we have deleters for everything we'll touch
     missing = _collect_missing_deleters(root)
     if missing:
+        # If caller asked not to delete the root, ignore missing deleter for the root itself
         if not delete_root and root.kind in missing:
             missing.remove(root.kind)
         if missing:
             kinds = ", ".join(sorted(missing))
             raise DeleteBlocked(root, msg=f"Missing deleter(s) for kind(s): {kinds}")
 
-    ans = input("Delete these blockers in the correct order now? [y/N]: ").strip().lower()
-    if ans not in ("y", "yes"):
-        raise DeleteBlocked(root, msg="User declined auto-delete of dependencies")
-
-    # Delete children (and optionally root) post-order
+    # Delete children (and optionally root) post-order — NO prompt
     if delete_root:
         _delete_tree_postorder(root)
     else:

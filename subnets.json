@@ -1,0 +1,116 @@
+{
+    "Subnets": [
+        {
+            "AvailabilityZoneId": "usw1-az1",
+            "MapCustomerOwnedIpOnLaunch": false,
+            "OwnerId": "049930841222",
+            "AssignIpv6AddressOnCreation": false,
+            "Ipv6CidrBlockAssociationSet": [],
+            "Tags": [
+                {
+                    "Key": "Name",
+                    "Value": "nainoa-faulkner-jackson-subnet-inside_HW3_CC"
+                },
+                {
+                    "Key": "SpecName",
+                    "Value": "mar5-demo-subnet-b"
+                },
+                {
+                    "Key": "Environment",
+                    "Value": "dev"
+                },
+                {
+                    "Key": "Assignment",
+                    "Value": "HW3"
+                },
+                {
+                    "Key": "Project",
+                    "Value": "Cloud_Computing"
+                },
+                {
+                    "Key": "Stack",
+                    "Value": "nainoa-faulkner-jackson-stack_HW3_CC"
+                },
+                {
+                    "Key": "Owner",
+                    "Value": "Mars"
+                }
+            ],
+            "SubnetArn": "arn:aws:ec2:us-west-1:049930841222:subnet/subnet-0540b55ebe3100b51",
+            "EnableDns64": false,
+            "Ipv6Native": false,
+            "PrivateDnsNameOptionsOnLaunch": {
+                "HostnameType": "ip-name",
+                "EnableResourceNameDnsARecord": false,
+                "EnableResourceNameDnsAAAARecord": false
+            },
+            "BlockPublicAccessStates": {
+                "InternetGatewayBlockMode": "off"
+            },
+            "SubnetId": "subnet-0540b55ebe3100b51",
+            "State": "available",
+            "VpcId": "vpc-08ed59a5a340a91c5",
+            "CidrBlock": "10.0.1.0/24",
+            "AvailableIpAddressCount": 250,
+            "AvailabilityZone": "us-west-1a",
+            "DefaultForAz": false,
+            "MapPublicIpOnLaunch": false
+        },
+        {
+            "AvailabilityZoneId": "usw1-az1",
+            "MapCustomerOwnedIpOnLaunch": false,
+            "OwnerId": "049930841222",
+            "AssignIpv6AddressOnCreation": false,
+            "Ipv6CidrBlockAssociationSet": [],
+            "Tags": [
+                {
+                    "Key": "SpecName",
+                    "Value": "mar5-demo-subnet-a"
+                },
+                {
+                    "Key": "Project",
+                    "Value": "Cloud_Computing"
+                },
+                {
+                    "Key": "Stack",
+                    "Value": "nainoa-faulkner-jackson-stack_HW3_CC"
+                },
+                {
+                    "Key": "Owner",
+                    "Value": "Mars"
+                },
+                {
+                    "Key": "Assignment",
+                    "Value": "HW3"
+                },
+                {
+                    "Key": "Environment",
+                    "Value": "dev"
+                },
+                {
+                    "Key": "Name",
+                    "Value": "nainoa-faulkner-jackson-subnet-outside_HW3_CC"
+                }
+            ],
+            "SubnetArn": "arn:aws:ec2:us-west-1:049930841222:subnet/subnet-0b0beb7df24ad8756",
+            "EnableDns64": false,
+            "Ipv6Native": false,
+            "PrivateDnsNameOptionsOnLaunch": {
+                "HostnameType": "ip-name",
+                "EnableResourceNameDnsARecord": false,
+                "EnableResourceNameDnsAAAARecord": false
+            },
+            "BlockPublicAccessStates": {
+                "InternetGatewayBlockMode": "off"
+            },
+            "SubnetId": "subnet-0b0beb7df24ad8756",
+            "State": "available",
+            "VpcId": "vpc-08ed59a5a340a91c5",
+            "CidrBlock": "10.0.0.0/24",
+            "AvailableIpAddressCount": 249,
+            "AvailabilityZone": "us-west-1a",
+            "DefaultForAz": false,
+            "MapPublicIpOnLaunch": true
+        }
+    ]
+}

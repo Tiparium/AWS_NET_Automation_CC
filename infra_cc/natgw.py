@@ -4,7 +4,7 @@ infra_cc/natgw.py
 Create / Status / Delete for a NAT Gateway with an Elastic IP.
 
 - NAT lives in our public subnet: "outside" (mar5-demo-subnet-a) at 10.0.0.0/24
-- Allocates and tags an Elastic IP if missing
+- Allocates and tags an Elastic IP if missing (reuses only if clearly free)
 - Tags everything with your naming convention + Spec tags
 - Registers a 'nat-gateway' deleter for the dependency pipeline
 - Adds a CLI spinner + elapsed timer for create/delete waits
@@ -25,8 +25,8 @@ from . import vpc as vpc_mod
 from .deps    import register_checker, register_deleter, build_tree, prompt_and_delete
 
 # ---- Names / spec labels ----
-NATGW_NAME   = res_name("natgw")       # e.g. nainoa-faulkner-jackson-natgw_HW3_CC
-NAT_EIP_NAME = res_name("eip-nat")     # e.g. nainoa-faulkner-jackson-eip-nat_HW3_CC
+NATGW_NAME   = res_name("natgw")       # e.g., nainoa-faulkner-jackson-natgw_HW3_CC
+NAT_EIP_NAME = res_name("eip-nat")     # e.g., nainoa-faulkner-jackson-eip-nat_HW3_CC
 SPEC_NG      = "mar5-demo-ngw"
 SPEC_EIP     = "mar5-demo-ngw-eip"
 
@@ -86,7 +86,6 @@ def _wait_nat_state(nat_id: str, target: set[str], timeout: int = 900, poll: flo
                         sys.stdout.write(f"\r[wait] NAT {nat_id} {phase} | state=deleted | elapsed {_fmt_elapsed(elapsed)}   \n")
                         sys.stdout.flush()
                         return "deleted"
-                    # otherwise, not expected yet
                 else:
                     sys.stdout.write("\n")
                     raise
@@ -125,27 +124,44 @@ def _find_public_subnet_id() -> str | None:
     return subs[0]["SubnetId"]
 
 def _find_natgw() -> tuple[str | None, str | None, str | None, str | None]:
-    """Return (nat_gateway_id, subnet_id, allocation_id, state) for our NAT by Name tag."""
+    """
+    Return (nat_gateway_id, subnet_id, allocation_id, state) for an *active* NAT by Name tag.
+    Ignore tombstones in 'deleting'/'deleted' so create() can proceed immediately.
+    """
     c = ec2()
-    resp = c.describe_nat_gateways(Filters=[{"Name": "tag:Name", "Values": [NATGW_NAME]}])
+    resp = c.describe_nat_gateways(
+        Filters=[
+            {"Name": "tag:Name", "Values": [NATGW_NAME]},
+            {"Name": "state",    "Values": ["pending", "available"]},  # key filter
+        ]
+    )
     ngws = resp.get("NatGateways", [])
     if not ngws:
         return (None, None, None, None)
     if len(ngws) > 1:
-        raise SystemExit(f"[abort] multiple NAT gateways named {NATGW_NAME}")
+        raise SystemExit(f"[abort] multiple active NAT gateways named {NATGW_NAME}")
     g = ngws[0]
     allocs = g.get("NatGatewayAddresses", [])
     alloc_id = allocs[0].get("AllocationId") if allocs else None
     return (g["NatGatewayId"], g.get("SubnetId"), alloc_id, g.get("State"))
 
 def _find_eip_allocation() -> str | None:
+    """
+    Find our tagged EIP allocation if it's not in use.
+    If it's still associated (e.g., ghosting on a NAT/ENI), return None so we allocate a fresh one.
+    """
     c = ec2()
-    addrs = c.describe_addresses(Filters=[{"Name": "tag:Name", "Values": [NAT_EIP_NAME]}]).get("Addresses", [])
+    addrs = c.describe_addresses(
+        Filters=[{"Name": "tag:Name", "Values": [NAT_EIP_NAME]}]
+    ).get("Addresses", [])
     if not addrs:
         return None
-    if len(addrs) > 1:
-        raise SystemExit(f"[abort] multiple EIPs tagged Name={NAT_EIP_NAME}")
-    return addrs[0]["AllocationId"]
+    # Prefer an address that isn't associated to anything
+    for a in addrs:
+        if not a.get("AssociationId") and not a.get("NetworkInterfaceId"):
+            return a["AllocationId"]
+    # Otherwise, safer to allocate a fresh one
+    return None
 
 def _allocate_eip_tagged() -> str:
     c = ec2()
